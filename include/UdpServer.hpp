@@ -18,10 +18,10 @@ public:
         , _socket(_io_context, udp::endpoint(udp::v4(), port))
         , _queue{ queue }
     {
-        do_receive();
     }
     void run()
     {
+        do_receive();
         _io_context.run();
     }
 

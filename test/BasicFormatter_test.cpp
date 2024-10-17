@@ -21,19 +21,15 @@ TEST_CASE("Sanity test")
     REQUIRE(2 * 2 == 4);
 }
 
-TEST_CASE("Asii stuff is detected as ascii stuff", "[formatter]")
+using namespace mmd;
+
+void REQUIRE_TYPE_EQUAL(const ReceivedData &rdata, std::string_view expected)
 {
-    using namespace mmd;
     using std::views::drop;
     using std::views::split;
 
     BasicFormatter formatter{};
-    ReceivedData rdata{};
 
-    std::string_view sw(test_data::AsciiData);
-
-    rdata.datasize = sw.size();
-    memcpy(rdata.data, sw.data(), sw.size());
     const auto fdata = formatter.format(rdata);
 
     std::string_view rsw(fdata.data, fdata.datasize);
@@ -47,60 +43,38 @@ TEST_CASE("Asii stuff is detected as ascii stuff", "[formatter]")
     std::string s;
     std::ranges::copy(fifth, std::back_inserter(s));
 
-    REQUIRE(s == "ascii");
+    REQUIRE(s == expected);
+}
+
+TEST_CASE("Asii stuff is detected as ascii stuff", "[formatter]")
+{
+    ReceivedData rdata{};
+
+    std::string_view sw(test_data::AsciiData);
+
+    rdata.datasize = sw.size();
+    memcpy(rdata.data, sw.data(), sw.size());
+
+    REQUIRE_TYPE_EQUAL(rdata, "ascii");
 }
 
 TEST_CASE("UTF-8 stuff is detected as UTF-8 stuff", "[formatter]")
 {
-    using namespace mmd;
-    using std::views::drop;
-    using std::views::split;
-
-    BasicFormatter formatter{};
     ReceivedData rdata{};
 
     rdata.datasize = sizeof(test_data::Utf8Data);
     memcpy(rdata.data, test_data::Utf8Data, rdata.datasize);
-    const auto fdata = formatter.format(rdata);
 
-    std::string_view rsw{ fdata.data, fdata.datasize };
-
-    auto filtered = rsw | split(';') | drop(5);
-    auto it = filtered.begin();
-
-    REQUIRE(it != std::ranges::end(filtered));
-
-    auto fifth = *it;
-    std::string s;
-    std::ranges::copy(fifth, std::back_inserter(s));
-
-    REQUIRE(s == "utf8");
+    REQUIRE_TYPE_EQUAL(rdata, "utf8");
 }
 
 TEST_CASE("Binary stuff is detected as binary stuff", "[formatter]")
 {
-    using namespace mmd;
-    using std::views::drop;
-    using std::views::split;
-
-    BasicFormatter formatter{};
     ReceivedData rdata{};
 
     rdata.datasize = sizeof(test_data::BinaryData);
     memcpy(rdata.data, &test_data::BinaryData[0], rdata.datasize);
-    const auto fdata = formatter.format(rdata);
 
-    std::string_view rsw{ fdata.data, fdata.datasize };
-
-    auto filtered = rsw | split(';') | drop(5);
-    auto it = filtered.begin();
-
-    REQUIRE(it != std::ranges::end(filtered));
-
-    auto fifth = *it;
-    std::string s;
-    std::ranges::copy(fifth, std::back_inserter(s));
-
-    REQUIRE(s == "bin");
+    REQUIRE_TYPE_EQUAL(rdata, "bin");
 }
 #endif // BASICFORMATTER_TEST_HPP_

@@ -25,8 +25,8 @@ try {
     const auto filter = params.filter();
     const auto filename = params.filename();
 
-    fmt::print("Starting server at {}:{} with mask {}\nWriting log to {}\n", address, port, filter,
-               filename);
+    fmt::print("Starting server at {}:{} with filter string {}\nWriting log to {}\n", address, port,
+               filter, filename);
 
     // init the queue to transfer from server to writer
     mmd::ReceiverQueue rqueue;
