@@ -14,16 +14,16 @@ class FileDataWriter
 public:
     FileDataWriter(const std::string &file_path)
     {
-        fd_ = ::open(file_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-        if (fd_ == -1) {
+        _fd = ::open(file_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (_fd == -1) {
             throw std::system_error(errno, std::generic_category(), "Failed to open file");
         }
     }
 
     ~FileDataWriter()
     {
-        if (fd_ != -1) {
-            ::close(fd_);
+        if (_fd != -1) {
+            ::close(_fd);
         }
     }
 
@@ -32,7 +32,7 @@ public:
         size_t total_written = 0;
         while (total_written < data.size()) {
             ssize_t bytes_written =
-                    ::write(fd_, data.data() + total_written, data.size() - total_written);
+                    ::write(_fd, data.data() + total_written, data.size() - total_written);
             if (bytes_written == -1) {
                 throw std::system_error(errno, std::generic_category(), "Failed to write to file");
             }
@@ -41,7 +41,7 @@ public:
     }
 
 private:
-    int fd_; // File descriptor
+    int _fd; // File descriptor
 };
 } // namespace mmd
 

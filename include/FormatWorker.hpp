@@ -22,17 +22,6 @@ concept Formatter = requires(T t, const ReceivedData &rd)
     } -> std::same_as<FormattedData>;
 };
 
-template<typename T, typename V>
-concept Queue = requires(T t, V v)
-{
-    {
-        t.PopOptional()
-    } -> std::same_as<std::optional<V>>;
-    {
-        t.Push(v)
-    } -> std::same_as<bool>;
-};
-
 template<Formatter FormatterT, typename RQueueT, typename FQueueT>
 requires(Queue<RQueueT, ReceivedData> &&Queue<FQueueT, FormattedData>) class FormatWorker
 {
@@ -47,22 +36,27 @@ public:
     void run()
     {
         using namespace fmt::literals;
-        while (2 * 2 == 4) {
+        while (!_stop) {
             if (const auto rec = _rqueue.get().PopOptional(); rec) {
-                const auto rdata = rec.value();
-                const auto fdata = _formatter.get().format(rdata);
-                [[maybe_unused]] const auto pr = _fqueue.get().Push(fdata);
+                auto rdata = rec.value();
+                auto fdata = _formatter.get().format(rdata);
+                [[maybe_unused]] const auto pr = _fqueue.get().Push(std::move(fdata));
 #ifdef BENCHMARK_LOGS
                 if (!pr) fmt::print("ffull\n");
 #endif
             }
         }
     }
+    void stop()
+    {
+        _stop = true;
+    }
 
 private:
     std::reference_wrapper<FormatterT> _formatter;
     std::reference_wrapper<RQueueT> _rqueue;
     std::reference_wrapper<FQueueT> _fqueue;
+    bool _stop{ false };
 };
 } // namespace mmd
 

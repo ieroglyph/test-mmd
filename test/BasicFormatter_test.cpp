@@ -1,6 +1,3 @@
-#ifndef BASICFORMATTER_TEST_HPP_
-#define BASICFORMATTER_TEST_HPP_
-
 #include <catch2/catch_test_macros.hpp>
 
 #include "BasicFormatter.hpp"
@@ -77,4 +74,3 @@ TEST_CASE("Binary stuff is detected as binary stuff", "[formatter]")
 
     REQUIRE_TYPE_EQUAL(rdata, "bin");
 }
-#endif // BASICFORMATTER_TEST_HPP_

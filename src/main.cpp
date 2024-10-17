@@ -1,9 +1,12 @@
 #include <fmt/compile.h>
 #include <fmt/core.h>
 
+#include <iostream>
 #include <string>
 #include <string_view>
+#include <termios.h>
 #include <thread>
+#include <unistd.h>
 
 #include "BasicFormatter.hpp"
 #include "Common.hpp"
@@ -11,6 +14,21 @@
 #include "FormatWorker.hpp"
 #include "Params.hpp"
 #include "UdpServer.hpp"
+
+void waitForQuitSignal(bool &signal_quit)
+{
+    termios oldt, newt;
+    tcgetattr(STDIN_FILENO, &oldt); // Get current terminal settings
+    newt = oldt; // Copy them to a new struct
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt); // Apply the new settings
+    while (!signal_quit) {
+        char ch;
+        std::cin >> ch; // Read a single character
+        if (ch == 'q') signal_quit = true;
+    }
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // Restore original settings
+}
 
 int main(int argc, char **argv)
 try {
@@ -20,52 +38,69 @@ try {
         return 0;
     }
 
-    const auto address = params.address();
-    const auto port = params.port();
-    const auto filter = params.filter();
-    const auto filename = params.filename();
-
-    fmt::print("Starting server at {}:{} with filter string {}\nWriting log to {}\n", address, port,
-               filter, filename);
+    fmt::print("Starting server at {}:{} with filter string {}\nWriting log to {}\n",
+               params.address(), params.port(), params.filter(), params.filename());
 
     // init the queue to transfer from server to writer
     mmd::ReceiverQueue rqueue;
     mmd::FormatterQueue fqueue;
 
+    // global signal to stop things
+    bool signal_quit{ false };
+
     // formatting part
-    // separated to make things spicier, and to test it
+    // separated to make things spicier, and to test it properly
     // runs in it's own thread
     mmd::BasicFormatter formatter;
     mmd::FormatWorker fworker(formatter, rqueue, fqueue);
-    auto fthread = std::thread([&fworker] {
-        fworker.run();
+    auto fthread = std::thread([&fworker, &signal_quit] {
+        try {
+            fworker.run();
+        } catch (std::exception &e) {
+            fmt::print("fthread failed with exception: {}", e.what());
+            signal_quit = true;
+        }
     });
 
     // server part
-    mmd::UdpServer s(port, rqueue);
-    auto sthread = std::thread([&s] {
-        s.run();
+    mmd::UdpServer server(params.address(), params.port(), rqueue);
+    auto sthread = std::thread([&server, &signal_quit] {
+        try {
+            server.run();
+        } catch (std::exception &e) {
+            fmt::print("sthread failed with exception: {}", e.what());
+            signal_quit = true;
+        }
     });
 
     // file writing part
     // runs in it's own thread, apparently
     // i'm too lazy to create a class for this worker
-    mmd::FileDataWriter fwriter(filename);
-    auto wthread = std::thread([&fwriter, &fqueue] {
-        while (2 * 2 == 4) {
-            const auto i = fqueue.PopOptional();
-            if (i) {
-                fwriter.write({ i.value().data, i.value().datasize });
+    auto wthread = std::thread([filename = params.filename(), &fqueue, &signal_quit] {
+        try {
+            mmd::FileDataWriter fwriter(filename);
+            while (!signal_quit) {
+                const auto i = fqueue.PopOptional();
+                if (i) {
+                    fwriter.write({ i.value().data, i.value().datasize });
+                }
             }
+        } catch (std::exception &e) {
+            fmt::print("wthread failed with exception: {}", e.what());
+            signal_quit = true;
         }
     });
 
-    // wait for threads to stop... on what condithin though?
-    // TODO: add read from keyboard to stop things
+    fmt::print("q to quit\n");
+    waitForQuitSignal(signal_quit);
+
+    fmt::print("Stopping work; press ^C to force stop\n");
+    server.stop();
+    fworker.stop();
+
     sthread.join();
     wthread.join();
     fthread.join();
-
 } catch (const cxxopts::exceptions::exception &e) {
     fmt::print("Error parsing command line args. Try --help for usage details.");
     return 1;

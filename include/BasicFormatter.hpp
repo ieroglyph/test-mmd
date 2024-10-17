@@ -1,7 +1,7 @@
 #ifndef BASICFORMATTER_HPP_
 #define BASICFORMATTER_HPP_
 
-#include "FormatWorker.hpp"
+#include "FormatWorker.hpp" // for Formatter concept
 
 namespace mmd {
 
@@ -14,26 +14,41 @@ enum class DataType {
 class BasicFormatter
 {
 public:
-    static FormattedData format(const ReceivedData &rdata)
+    BasicFormatter(const std::string &filter_string = "")
+        : _filter_string{ filter_string }
+    {
+    }
+    FormattedData format(const ReceivedData &rdata) const
     {
         FormattedData fdata{};
-        const auto dataType = detectDataType(rdata.data, rdata.datasize);
-        const auto formattedSize = [dataType, &fdata, &rdata] {
-            if (dataType == DataType::Binary) {
+        const auto data_type = detectDataType(rdata.data, rdata.datasize);
+
+        if (data_type == DataType::Ascii && !passesFilter(rdata.data, rdata.datasize)) return fdata;
+
+        const auto formattedSize = [data_type, &fdata, &rdata] {
+            if (data_type == DataType::Binary) {
                 return fmt::format_to(
                         std::begin(fdata.data), FMT_COMPILE("ts;{};addr;{};type;bin;data;{:02x}\n"),
-                        rdata.timestamp, rdata.address,
+                        rdata.timestamp,
+                        fmt::join(std::span(std::begin(rdata.addr), rdata.addrsize), ""),
                         fmt::join(std::span(std::begin(rdata.data), rdata.datasize), ""));
             } else {
-                return fmt::format_to(std::begin(fdata.data),
-                                      FMT_COMPILE("ts;{};addr;{};type;{};data;{:s}\n"),
-                                      rdata.timestamp, rdata.address,
-                                      (dataType == DataType::Ascii ? "ascii" : "utf8"),
-                                      std::span(std::begin(rdata.data), rdata.datasize));
+                return fmt::format_to(
+                        std::begin(fdata.data), FMT_COMPILE("ts;{};addr;{};type;{};data;{:s}\n"),
+                        rdata.timestamp,
+                        fmt::join(std::span(std::begin(rdata.addr), rdata.addrsize), ""),
+                        (data_type == DataType::Ascii ? "ascii" : "utf8"),
+                        std::span(std::begin(rdata.data), rdata.datasize));
             }
         }();
         fdata.datasize = std::distance(fdata.data, formattedSize);
         return fdata;
+    }
+
+    bool passesFilter(const char *data, size_t datasize) const
+    {
+        // TODO: do some filtering here, or something, no idea
+        return true;
     }
 
     static DataType detectDataType(const char *data, size_t datasize)
@@ -78,6 +93,9 @@ public:
 
         return isAscii ? DataType::Ascii : DataType::Utf8;
     }
+
+private:
+    std::string _filter_string{ "" };
 };
 
 static_assert(Formatter<BasicFormatter>, "Formatter is not a formatter");
