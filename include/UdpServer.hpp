@@ -10,19 +10,36 @@
 using asio::ip::udp;
 
 namespace mmd {
-class UdpServer
+
+template<typename RQueueT>
+requires(Queue<RQueueT, ReceivedData>) class UdpServer
 {
 public:
-    UdpServer(short port, ReceiverQueue &queue)
-        : _io_context()
-        , _socket(_io_context, udp::endpoint(udp::v4(), port))
+    UdpServer(const std::string &address, short port, RQueueT &queue)
+        : _context()
+        , _socket(_context)
         , _queue{ queue }
     {
+        auto addr = asio::ip::make_address(address);
+
+        udp::endpoint ep(addr, port);
+        _socket.open(ep.protocol());
+        _socket.set_option(asio::ip::udp::socket::reuse_address(true));
+
+        if (addr.is_multicast()) {
+            _socket.set_option(asio::ip::multicast::join_group(addr));
+        }
+        _socket.bind(ep);
     }
     void run()
     {
         do_receive();
-        _io_context.run();
+        _context.run();
+    }
+    void stop()
+    {
+        _socket.cancel();
+        _context.stop();
     }
 
 private:
@@ -30,8 +47,8 @@ private:
     {
         const auto callback = [this](std::error_code ec, std::size_t bytes_recvd) {
             if (!ec && bytes_recvd > 0) {
-                [[maybe_unused]] const auto pr = _queue.get().Push(
-                        { _sender.address().to_v4().to_uint(), _data, bytes_recvd });
+                ReceivedData rdata{ _sender.address().to_string(), _data, bytes_recvd };
+                [[maybe_unused]] const auto pr = _queue.get().Push(rdata);
 #ifdef BENCHMARK_LOGS
                 if (!pr) fmt::print("sfull\n");
 #endif
@@ -40,11 +57,11 @@ private:
         };
         _socket.async_receive_from(asio::buffer(_data, config::buf_size), _sender, callback);
     }
-    asio::io_context _io_context;
+    asio::io_context _context;
     udp::socket _socket;
     udp::endpoint _sender;
     char _data[config::buf_size];
-    std::reference_wrapper<ReceiverQueue> _queue;
+    std::reference_wrapper<RQueueT> _queue;
 };
 } // namespace mmd
 
