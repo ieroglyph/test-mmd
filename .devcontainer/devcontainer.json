@@ -12,6 +12,8 @@
     "extensions": [
         "ms-vscode.cpptools",
         "ms-vscode.cpptools-extension-pack",
-        "ms-vscode.cmake-tools"
+        "ms-vscode.cmake-tools",
+        "matepek.vscode-catch2-test-adapter",
+        "akiramiyakoda.cppincludeguard"
     ],
 }
