@@ -1,3 +1,12 @@
+/**
+ * @file UdpServer.hpp
+ * @brief Contains implementation of a server worker + listener, 2 in 1
+ * @version 0.1
+ * @date 2024-10-18
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #ifndef UDPSERVER_HPP_
 #define UDPSERVER_HPP_
 
@@ -11,6 +20,13 @@ using asio::ip::udp;
 
 namespace mmd {
 
+/**
+ * @brief Construct a new requires object
+ * Pretty basic implementation of an asio-based server, really
+ * @todo Separate worker from server listener for testing purposes 
+ * 
+ * @tparam RQueueT Type for a queue of a ReceivedData to write to
+ */
 template<typename RQueueT>
 requires(Queue<RQueueT, ReceivedData>) class UdpServer
 {
@@ -31,11 +47,19 @@ public:
         }
         _socket.bind(ep);
     }
+
+    /**
+     * @brief Runs the server
+     * Technically, implements an endless pseudo-recursive callback async loop
+     * Requires call for stop() to stop,
+     * so better to run in a separate thread
+     */
     void run()
     {
         do_receive();
         _context.run();
     }
+
     void stop()
     {
         _socket.cancel();

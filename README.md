@@ -69,3 +69,32 @@ cd ./devcontainer && docker-compose run test
 -f, --filter arg   Set filter string (default: *)  
 -o, --output arg   Set output file name (default: ./mmdsrv.log)  
 ```
+
+## Manual testing
+
+To test the running server, some test data and scripts are provided.
+
+### Data logging testing
+
+The sample test data is located in the ./scripts, 
+and, if the server is running on the default port,
+sample scripts can be run using make:
+
+```bash
+cd scripts
+make asend # Sends data from test_ascii.exe, an ASCII encoded text file 
+make usend # Sends data from test_utf8.exe, an UTF-8 encoded text file 
+make bsend # Sends data from test_bin.gif, a binary file 
+```
+
+### Naive stress testing
+
+For an imitation of a stess testing,
+also an script is prepared.
+It will brutforce the random data to a port "file".
+Works only with `bash`, though.
+
+```bash
+cd scripts
+make spam 
+```

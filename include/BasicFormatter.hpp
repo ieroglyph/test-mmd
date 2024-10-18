@@ -1,3 +1,7 @@
+/**
+ * @brief Basic implementation of Formatter concept to use with FormatterWorker
+ */
+
 #ifndef BASICFORMATTER_HPP_
 #define BASICFORMATTER_HPP_
 
@@ -18,6 +22,7 @@ public:
         : _filter_string{ filter_string }
     {
     }
+
     FormattedData format(const ReceivedData &rdata) const
     {
         FormattedData fdata{};
@@ -67,7 +72,6 @@ public:
                 if (i + 1 >= s) return DataType::Binary;
                 unsigned char c1 = static_cast<unsigned char>(data[i + 1]);
                 if ((c1 & 0xC0) != 0x80) return DataType::Binary;
-                // Overlong encoding check
                 if (c == 0xC0 && c1 == 0x80) return DataType::Binary;
                 i += 2;
             } else if ((c & 0xF0) == 0xE0) { // 1110xxxx, three-byte sequence
@@ -98,6 +102,7 @@ private:
     std::string _filter_string{ "" };
 };
 
+// to check that we meet the concept requirements
 static_assert(Formatter<BasicFormatter>, "Formatter is not a formatter");
 
 } // namespace mmd

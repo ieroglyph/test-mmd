@@ -1,3 +1,12 @@
+/**
+ * @file FileDataWriter.hpp
+ * @brief Contains impelementation of FileDataWriter class.
+ * @version 0.1
+ * @date 2024-10-18
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #ifndef FILEDATAWRITER_HPP_
 #define FILEDATAWRITER_HPP_
 
@@ -9,6 +18,12 @@
 #include <unistd.h>
 
 namespace mmd {
+
+/**
+ * @brief RAII implementation of a file data writer.
+ * Writes a std::string_view to a file. 
+ * Throws on errors, that's way bette than errno!
+ */
 class FileDataWriter
 {
 public:

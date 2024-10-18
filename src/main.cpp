@@ -15,6 +15,12 @@
 #include "Params.hpp"
 #include "UdpServer.hpp"
 
+/**
+ * @brief Pauses the main thread and waits for input from the user. 
+ * If the user enters 'q', the program will quit.
+ * If the \p signal_quit becomes true, the function will return immediately.
+ * @param signal_quit 
+ */
 void waitForQuitSignal(bool &signal_quit)
 {
     termios oldt, newt;
@@ -41,7 +47,7 @@ try {
     fmt::print("Starting server at {}:{} with filter string {}\nWriting log to {}\n",
                params.address(), params.port(), params.filter(), params.filename());
 
-    // init the queue to transfer from server to writer
+    // init the queues to transfer from server to formatter to writer
     mmd::ReceiverQueue rqueue;
     mmd::FormatterQueue fqueue;
 
@@ -51,6 +57,8 @@ try {
     // formatting part
     // separated to make things spicier, and to test it properly
     // runs in it's own thread
+    // Separating formatter and queues helps with mocking, yada, yada, yada
+    // Any exception stops all things
     mmd::BasicFormatter formatter;
     mmd::FormatWorker fworker(formatter, rqueue, fqueue);
     auto fthread = std::thread([&fworker, &signal_quit] {
@@ -63,6 +71,9 @@ try {
     });
 
     // server part
+    // the same approach here, but only the queue is moved to templated args
+    // ideally the server should be separated from worker, same as with formatter
+    // Any exception stops all things
     mmd::UdpServer server(params.address(), params.port(), rqueue);
     auto sthread = std::thread([&server, &signal_quit] {
         try {
@@ -75,7 +86,8 @@ try {
 
     // file writing part
     // runs in it's own thread, apparently
-    // i'm too lazy to create a class for this worker
+    // could be the same as formatter and server thing, with its own tests, but ¯\_(ツ)_/¯
+    // Any exception stops all things
     auto wthread = std::thread([filename = params.filename(), &fqueue, &signal_quit] {
         try {
             mmd::FileDataWriter fwriter(filename);

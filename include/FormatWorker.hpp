@@ -1,3 +1,12 @@
+/**
+ * @file FormatWorker.hpp
+ * @brief Contains implementation of a worker that formats received data.
+ * @version 0.1
+ * @date 2024-10-18
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #ifndef FORMATWORKER_HPP_
 #define FORMATWORKER_HPP_
 
@@ -14,6 +23,11 @@
 
 namespace mmd {
 
+/**
+ * @brief Formatter concept
+ * Used to restrict the formatters that can be used in the FormatWorker.
+ * @tparam T 
+ */
 template<typename T>
 concept Formatter = requires(T t, const ReceivedData &rd)
 {
@@ -22,6 +36,15 @@ concept Formatter = requires(T t, const ReceivedData &rd)
     } -> std::same_as<FormattedData>;
 };
 
+/**
+ * @brief Construct a new requires object
+ * A super-basic worker that delegates all work to formatters and queues.
+ * Relays on the non-blocking thread grinding.
+ * 
+ * @tparam FormatterT Something that implements the Formatter concept.
+ * @tparam RQueueT Something that is a queue with ReceivedData.
+ * @tparam FQueueT Something that is a queue with FormattedData.
+ */
 template<Formatter FormatterT, typename RQueueT, typename FQueueT>
 requires(Queue<RQueueT, ReceivedData> &&Queue<FQueueT, FormattedData>) class FormatWorker
 {
@@ -35,7 +58,6 @@ public:
 
     void run()
     {
-        using namespace fmt::literals;
         while (!_stop) {
             if (const auto rec = _rqueue.get().PopOptional(); rec) {
                 auto rdata = rec.value();
@@ -47,6 +69,7 @@ public:
             }
         }
     }
+
     void stop()
     {
         _stop = true;
@@ -56,7 +79,7 @@ private:
     std::reference_wrapper<FormatterT> _formatter;
     std::reference_wrapper<RQueueT> _rqueue;
     std::reference_wrapper<FQueueT> _fqueue;
-    bool _stop{ false };
+    bool _stop{ false }; // no reason to have it atomic
 };
 } // namespace mmd
 

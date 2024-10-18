@@ -1,3 +1,12 @@
+/**
+ * @file Params.hpp
+ * @brief Parses params from command line
+ * @version 0.1
+ * @date 2024-10-18
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #ifndef PARAMS_HPP_
 #define PARAMS_HPP_
 
@@ -6,6 +15,10 @@
 #include <string>
 
 namespace mmd {
+/**
+ * @brief Parses params from command line
+ * No logics here, only the conversion of the path to the absolute path
+ */
 class Params
 {
 public:
@@ -34,27 +47,27 @@ public:
         _help = options.help();
     };
 
-    std::string address() const
+    [[nodiscard]] std::string address() const
     {
         return _address;
     }
-    uint16_t port() const
+    [[nodiscard]] uint16_t port() const
     {
         return _port;
     }
-    std::string filter() const
+    [[nodiscard]] std::string filter() const
     {
         return _filter;
     }
-    std::string filename() const
+    [[nodiscard]] std::string filename() const
     {
         return _filename;
     }
-    bool requestedHelp() const
+    [[nodiscard]] bool requestedHelp() const
     {
         return _requestedHelp;
     }
-    std::string help() const
+    [[nodiscard]] std::string help() const
     {
         return _help;
     }
