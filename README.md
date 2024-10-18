@@ -1,6 +1,6 @@
 # UDP port logger
 
-![test workflow](https://github.com/ieroglyph/test-mmd/actions/workflows/test.yml/badge.svg)
+[![test](https://github.com/ieroglyph/test-mmd/actions/workflows/test.yml/badge.svg)](https://github.com/ieroglyph/test-mmd/actions/workflows/test.yml)
 
 ## Description
 
