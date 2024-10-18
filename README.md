@@ -1,5 +1,7 @@
 # UDP port logger
 
+![test workflow](https://github.com/ieroglyph/test-mmd/actions/workflows/test.yml/badge.svg)
+
 ## Description
 
 Logs data from UDP port to a file.

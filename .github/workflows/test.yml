@@ -1,0 +1,23 @@
+name: test
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  checkout-and-run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installing dependencies
+        run: sudo apt-get install docker-compose -y
+      - name: Building docker image
+        run: |
+          cd ../../.devcontainer
+          docker-compose build
+      - name: Running tests
+        run: |
+          cd ../../.devcontainer 
+          docker-compose run test
