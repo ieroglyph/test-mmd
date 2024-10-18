@@ -15,9 +15,9 @@ jobs:
         run: sudo apt-get install docker-compose -y
       - name: Building docker image
         run: |
-          cd ../../.devcontainer
+          cd .devcontainer
           docker-compose build
       - name: Running tests
         run: |
-          cd ../../.devcontainer 
+          cd .devcontainer 
           docker-compose run test
