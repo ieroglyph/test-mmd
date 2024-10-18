@@ -1,5 +1,7 @@
 # Setting the shell so that /dev/udp device exists
-SHELL:=/bin/bash
+SHELL := /bin/bash
+
+BUILD_TESTS_OPTION := OFF
 
 asend: # send data in ASCII
 	dd if=./test_ascii.txt > /dev/udp/localhost/7768
@@ -17,12 +19,23 @@ spam: # spam binary data with maximal intencity, ^C to stop
 build:
 	pushd .. && \
 	mkdir -p build && \
-	cd build && \
-	cmake .. && \
+	pushd build && \
+	cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=$(BUILD_TESTS_OPTION) .. && \
 	make -j12 && \
+	popd && \
 	popd
 	
+server: BUILD_TESTS_OPTION=OFF 
 server: build
-	../build/mmdsrv
+	../build/Release/bin/mmdsrv
 
-.PHONY: asend bsend usend spam build server
+test: BUILD_TESTS_OPTION=ON 
+test: build
+	pushd ../build && \
+	ctest -VV && \
+	popd
+
+clean: 
+	rm -rf ../build
+
+.PHONY: asend bsend usend spam build server test clean
