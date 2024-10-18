@@ -87,11 +87,11 @@ make usend # Sends data from test_utf8.exe, an UTF-8 encoded text file
 make bsend # Sends data from test_bin.gif, a binary file 
 ```
 
-### Naive stress testing
+### Naïve stress testing
 
 For an imitation of a stess testing,
 also an script is prepared.
-It will brutforce the random data to a port "file".
+It will brutforce the random data to a port 7768.
 Works only with `bash`, though.
 
 ```bash
