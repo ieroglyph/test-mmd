@@ -49,13 +49,13 @@ cd ./devcontainer && docker-compose run server
 ### either
 
 ```bash
-cd scripts && make tests
+cd scripts && make test
 ```
 
 ### or
 
 ```bash
-cd ./devcontainer && docker-compose run tests
+cd ./devcontainer && docker-compose run test
 ```
 
 ## Command line usage
