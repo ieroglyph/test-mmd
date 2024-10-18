@@ -1,8 +1,24 @@
-version: '3.4'
-
 services:
-  su:
+  mmdsrv: &mmdsrv-common
     image: mmdsrv:latest
     build:
       context: .
       dockerfile: ./Dockerfile
+    volumes:
+      - ../:/app
+
+  test:
+    <<: *mmdsrv-common
+    command: "bash -c \"cd /app/scripts && make test\""
+
+  server:
+    <<: *mmdsrv-common
+    command: "bash -c \"cd /app/scripts && make server\""
+
+  build:
+    <<: *mmdsrv-common
+    command: "bash -c \"cd /app/scripts && make build\""
+
+  help:
+    <<: *mmdsrv-common
+    command: "bash -c \"cd /app/scripts && make build && ../build/Release/bin/mmdsrv -h\""
